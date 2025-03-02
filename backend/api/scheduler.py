@@ -1,12 +1,18 @@
-from database import get_db
+import random
+from firebase import get_firestore
+
+db = get_firestore()
 
 def generate_schedule():
-    db = get_db()
-    nurses = db.get_all_nurses()
-    if not nurses:
-        return False, "No nurses available"
+    nurses_ref = db.collection("nurses").stream()
+    nurses = [doc.id for doc in nurses_ref]
 
-    schedule = [{"nurse": nurse, "shift": "Morning"} for nurse in nurses]
-    db.save_schedule(schedule)
-    return True, schedule
+    schedule = []
+    shifts = ["Morning", "Evening", "Night"]
+
+    for nurse in nurses:
+        shift = random.choice(shifts)
+        schedule.append({"nurse_id": nurse, "shift": shift})
+
+    return {"schedule": schedule}
 
