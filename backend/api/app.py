@@ -1,29 +1,30 @@
-from flask import Flask, request, jsonify
-from firebase import get_firestore
-from scheduler import generate_schedule
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from auth import router as auth_router
+from schedule import router as schedule_router
+from routes import router as routes_router  # Assuming routes.py is ready
 
-app = Flask(__name__)
-db = get_firestore()
+app = FastAPI(title="NurseEase Admin API", version="1.0")
 
-@app.route("/nurses", methods=["GET"])
-def get_nurses():
-    nurses_ref = db.collection("nurses")
-    docs = nurses_ref.stream()
-    nurses = [{doc.id: doc.to_dict()} for doc in docs]
-    return jsonify(nurses)
+# CORS (Allow frontend to access the API)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change this to specific frontend domain in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.route("/nurses", methods=["POST"])
-def add_nurse():
-    data = request.json
-    db.collection("nurses").add(data)
-    return jsonify({"message": "Nurse added successfully"}), 201
+# Include route files
+app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
+app.include_router(schedule_router, prefix="/schedule", tags=["Scheduling"])
+app.include_router(routes_router, tags=["Routes"])  # If routes.py is ready
 
-@app.route("/schedule", methods=["POST"])
-def create_schedule():
-    schedule = generate_schedule()
-    db.collection("schedules").add(schedule)
-    return jsonify({"message": "Schedule generated"}), 201
+# Root Endpoint
+@app.get("/")
+async def root():
+    return {"message": "Welcome to NurseEase Admin API"}
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
