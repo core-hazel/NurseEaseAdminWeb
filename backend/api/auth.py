@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends, Header
 import firebase_admin
 from firebase_admin import auth, credentials
+from firebase import get_firestore  # Import Firestore setup
 
 # Initialize Firebase Admin SDK (Prevent re-initialization)
 if not firebase_admin._apps:
@@ -14,11 +15,11 @@ router = APIRouter()
 async def signup(email: str, password: str):
     try:
         user = auth.create_user(email=email, password=password)
-        return {"message": "User created successfully", "uid": user.uid}
+        return {"message": "User  created successfully", "uid": user.uid}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        raise HTTPException(status_code=400, detail=f"Signup failed: {str(e)}")
 
-# Login Route (Firebase Authentication uses ID Tokens)
+# Login Route
 @router.post("/login")
 async def login(id_token: str):
     try:

@@ -3,9 +3,7 @@ from google.cloud import firestore
 from datetime import datetime, timedelta
 
 router = APIRouter()
-
-# Initialize Firestore Client
-db = firestore.Client()
+db = firestore.Client()  # Initialize Firestore Client
 
 # Auto-generate schedule for nurses
 @router.post("/generate-schedule")
@@ -30,7 +28,7 @@ async def generate_schedule():
         return {"message": "Schedule generated successfully", "schedules": schedules}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to generate schedule: {str(e)}")
 
 # Get schedule for all nurses
 @router.get("/schedules")
@@ -41,7 +39,7 @@ async def get_schedules():
         return {"schedules": schedules}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve schedules: {str(e)}")
 
 # Delete all schedules (Reset)
 @router.delete("/reset-schedule")
@@ -54,4 +52,4 @@ async def reset_schedule():
         return {"message": "All schedules deleted successfully"}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Failed to reset schedules: {str(e)}")

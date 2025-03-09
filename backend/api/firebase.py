@@ -7,6 +7,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 def initialize_firebase():
+    """
+    Initializes the Firebase Admin SDK and returns the Firestore client.
+    """
     try:
         # Get absolute path of serviceAccountKey.json
         BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
