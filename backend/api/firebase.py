@@ -1,33 +1,29 @@
-import firebase_admin
-from firebase_admin import credentials, firestore
-import os
-import logging
+from firebase import get_firestore
+from werkzeug.security import check_password_hash
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+db = get_firestore()
 
-def initialize_firebase():
-    """
-    Initializes the Firebase Admin SDK and returns the Firestore client.
-    """
+def get_admin_details(hospital_id, username):
     try:
-        # Get absolute path of serviceAccountKey.json
-        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        KEY_PATH = os.path.join(BASE_DIR, "serviceAccountKey.json")
-
-        # Load the Firebase Admin SDK key
-        cred = credentials.Certificate(KEY_PATH)
-        firebase_admin.initialize_app(cred)
-        logging.info("Firebase initialized successfully.")
+        # Reference to the "admins" collection within the specific hospital
+        admin_ref = db.collection('hospitals').document(hospital_id).collection('admins').document(username)
+        admin_doc = admin_ref.get()
+        
+        if admin_doc.exists:
+            return admin_doc.to_dict()
+        else:
+            return None
     except Exception as e:
-        logging.error(f"Failed to initialize Firebase: {e}")
-        raise
+        print(f"Error fetching admin details: {e}")
+        return None
 
-# Initialize Firebase
-initialize_firebase()
 
-# Firestore DB reference
-db = firestore.client()
+def authenticate_admin(hospital_id, username, raw_password):
+    admin_data = get_admin_details(hospital_id, username)
+    
+    if admin_data:
+        stored_password_hash = admin_data.get('passwordHash')
+        if check_password_hash(stored_password_hash, raw_password):  # Compare hash with raw password
+            return True
+    return False
 
-def get_firestore():
-    return db

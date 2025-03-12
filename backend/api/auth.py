@@ -1,45 +1,43 @@
-from fastapi import APIRouter, HTTPException, Depends, Header
-import firebase_admin
-from firebase_admin import auth, credentials
-from firebase import get_firestore  # Import Firestore setup
+from flask import Blueprint, request, jsonify
+from werkzeug.security import check_password_hash
+from firebase import db  # Assuming this is your initialized Firestore client
 
-# Initialize Firebase Admin SDK (Prevent re-initialization)
-if not firebase_admin._apps:
-    cred = credentials.Certificate("path/to/your/firebase-adminsdk.json")
-    firebase_admin.initialize_app(cred)
 
-router = APIRouter()
+auth = Blueprint('auth', __name__)
 
-# Signup Route
-@router.post("/signup")
-async def signup(email: str, password: str):
+def get_admin_data(hospital_id, admin_id):
     try:
-        user = auth.create_user(email=email, password=password)
-        return {"message": "User  created successfully", "uid": user.uid}
+        doc_ref = db.collection('hospitals').document(hospital_id).collection('admins').document(admin_id)
+        doc = doc_ref.get()
+        if doc.exists:
+            return doc.to_dict()
+        else:
+            return None
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Signup failed: {str(e)}")
+        print(f"Error fetching admin data: {e}")
+        return None
 
-# Login Route
-@router.post("/login")
-async def login(id_token: str):
-    try:
-        decoded_token = auth.verify_id_token(id_token)
-        return {"message": "Login successful", "uid": decoded_token["uid"]}
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
 
-# Middleware to verify token
-async def get_current_user(authorization: str = Header(None)):
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Authorization header missing")
-    try:
-        token = authorization.split("Bearer ")[1]
-        decoded_token = auth.verify_id_token(token)
-        return decoded_token
-    except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+@auth.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    hospital_id = data.get('hospitalId')
+    admin_id = data.get('adminId')
+    password = data.get('password')
 
-# Example Protected Route
-@router.get("/protected")
-async def protected_route(user_data: dict = Depends(get_current_user)):
-    return {"message": "You have access!", "user": user_data}
+    if not hospital_id or not admin_id or not password:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+    admin_data = get_admin_data(hospital_id, admin_id)
+
+    if admin_data is None:
+        return jsonify({'error': 'Admin not found'}), 404
+
+    stored_password_hash = admin_data.get('passwordHash')
+
+    if not check_password_hash(stored_password_hash, password):
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+    # If everything is okay, return success message
+    return jsonify({'message': 'Login successful', 'role': admin_data.get('role')}), 200
+
