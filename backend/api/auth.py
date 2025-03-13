@@ -1,11 +1,16 @@
-from flask import Blueprint, request, jsonify
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from werkzeug.security import check_password_hash
-from firebase import db  # Assuming this is your initialized Firestore client
+from firebase_config import db  # Assuming this is your initialized Firestore client
 
+router = APIRouter()
 
-auth = Blueprint('auth', __name__)
+class LoginRequest(BaseModel):
+    hospitalId: str
+    adminId: str
+    password: str
 
-def get_admin_data(hospital_id, admin_id):
+def get_admin_data(hospital_id: str, admin_id: str):
     try:
         doc_ref = db.collection('hospitals').document(hospital_id).collection('admins').document(admin_id)
         doc = doc_ref.get()
@@ -17,27 +22,18 @@ def get_admin_data(hospital_id, admin_id):
         print(f"Error fetching admin data: {e}")
         return None
 
-
-@auth.route('/login', methods=['POST'])
-def login():
-    data = request.json
-    hospital_id = data.get('hospitalId')
-    admin_id = data.get('adminId')
-    password = data.get('password')
-
-    if not hospital_id or not admin_id or not password:
-        return jsonify({'error': 'Missing required fields'}), 400
-
-    admin_data = get_admin_data(hospital_id, admin_id)
+@router.post("/login")
+async def login(request: LoginRequest):
+    admin_data = get_admin_data(request.hospitalId, request.adminId)
 
     if admin_data is None:
-        return jsonify({'error': 'Admin not found'}), 404
+        raise HTTPException(status_code=404, detail="Admin not found")
 
     stored_password_hash = admin_data.get('passwordHash')
 
-    if not check_password_hash(stored_password_hash, password):
-        return jsonify({'error': 'Invalid credentials'}), 401
+    if not check_password_hash(stored_password_hash, request.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
     # If everything is okay, return success message
-    return jsonify({'message': 'Login successful', 'role': admin_data.get('role')}), 200
+    return {"message": "Login successful", "role": admin_data.get('role')}
 
