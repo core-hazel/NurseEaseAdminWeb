@@ -9,7 +9,7 @@ app = FastAPI(title="NurseEase Admin API", version="1.0")
 # CORS (Allow frontend to access the API)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://your-frontend-domain.com"],  # Change this to specific frontend domain in production
+    allow_origins=["http://localhost:5173"],  # Change this to your frontend domain
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
