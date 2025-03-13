@@ -1,9 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from google.cloud import firestore
+from firebase import get_firestore
+#db = get_firestore()
+
 from datetime import datetime, timedelta
 
 router = APIRouter()
-db = firestore.Client()  # Initialize Firestore Client
+#from firebase import get_firestore
+db = get_firestore()
+#db = firestore.Client()  # Initialize Firestore Client
 
 # Auto-generate schedule for nurses
 @router.post("/generate-schedule")
