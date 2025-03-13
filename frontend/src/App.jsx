@@ -1,16 +1,19 @@
-import './App.css'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import Login from './components/Login';
+import React from 'react';
+import Dropdown from './components/Dropdown';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        {/* Add more routes here */}
-      </Routes>
-    </Router>
-  );
-}
+const App = () => {
+    const handleHospitalSelect = (hospital) => {
+        console.log('Selected Hospital:', hospital);
+        // You can save the selected hospital ID here to send with other requests if needed
+    };
+
+    return (
+        <div className="App p-4">
+            <h1 className="text-2xl mb-4">Hospital Selection</h1>
+            <Dropdown onHospitalSelect={handleHospitalSelect} />
+        </div>
+    );
+};
 
 export default App;
+

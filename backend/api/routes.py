@@ -24,3 +24,15 @@ async def add_nurse(nurse: dict):
         return {"message": "Nurse added successfully", "id": doc_ref.id}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to add nurse: {str(e)}")
+
+
+# Route for fetching all hospitals
+@router.get("/hospitals")
+async def get_hospitals():
+    try:
+        hospitals_ref = db.collection("hospitals").order_by("name")
+        hospitals = [{"name": doc.get("name"), "id": doc.id} for doc in hospitals_ref.stream()]
+        return {"hospitals": hospitals}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch hospitals: {str(e)}")
+
