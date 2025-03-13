@@ -43,6 +43,15 @@ export const createAdmin = async (username, password, role) => {
         throw error;
     }
 };
+export const fetchHospitals = async () => {
+    try {
+        const response = await api.get('/hospitals');
+        return response.data.hospitals;
+    } catch (error) {
+        console.error('Fetch Hospitals Error:', error);
+        throw error;
+    }
+};
 
 export default api;
 
