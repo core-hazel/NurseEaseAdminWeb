@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
 
 const hospitals = ["Hospital A", "Hospital B", "Hospital C"]; // This should be fetched from OpenXL
 const roles = {
@@ -8,11 +9,12 @@ const roles = {
   n123: "Nurse",
 };
 
-export default function Login() {
+function Login() {
   const [hospital, setHospital] = useState("");
   const [nurseID, setNurseID] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState(null);
+  const navigate = useNavigate();
 
   const handleLogin = () => {
     if (roles[password]) {
@@ -65,6 +67,12 @@ export default function Login() {
             >
               Login
             </button>
+            <button
+              onClick={() => navigate("/register")}
+              className="w-full bg-gray-600 text-white p-2 rounded mt-2 hover:bg-gray-700"
+            >
+              Register
+            </button>
           </>
         ) : (
           <div className="text-center">
@@ -80,5 +88,78 @@ export default function Login() {
         )}
       </div>
     </div>
+  );
+}
+
+function Register() {
+  const [hospitalName, setHospitalName] = useState("");
+  const [chiefAdmin, setChiefAdmin] = useState("");
+  const [subscription, setSubscription] = useState("Normal");
+  const navigate = useNavigate();
+
+  const handleRegister = () => {
+    alert("Registration successful!");
+    navigate("/");
+  };
+
+  return (
+    <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+        <h2 className="text-2xl font-bold text-center text-blue-600">Register</h2>
+        <div className="mt-4">
+          <label className="block text-gray-700">Hospital Name:</label>
+          <input
+            type="text"
+            value={hospitalName}
+            onChange={(e) => setHospitalName(e.target.value)}
+            className="w-full p-2 border rounded mt-1"
+          />
+        </div>
+        <div className="mt-4">
+          <label className="block text-gray-700">Chief Admin Name:</label>
+          <input
+            type="text"
+            value={chiefAdmin}
+            onChange={(e) => setChiefAdmin(e.target.value)}
+            className="w-full p-2 border rounded mt-1"
+          />
+        </div>
+        <div className="mt-4">
+          <label className="block text-gray-700">Subscription Level:</label>
+          <select
+            value={subscription}
+            onChange={(e) => setSubscription(e.target.value)}
+            className="w-full p-2 border rounded mt-1"
+          >
+            <option>Normal</option>
+            <option>Silver</option>
+            <option>Gold</option>
+          </select>
+        </div>
+        <button
+          onClick={handleRegister}
+          className="w-full bg-blue-600 text-white p-2 rounded mt-4 hover:bg-blue-700"
+        >
+          Register
+        </button>
+        <button
+          onClick={() => navigate("/")}
+          className="w-full bg-gray-600 text-white p-2 rounded mt-2 hover:bg-gray-700"
+        >
+          Back to Login
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </Router>
   );
 }
