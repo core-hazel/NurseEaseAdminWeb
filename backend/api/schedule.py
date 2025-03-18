@@ -1,133 +1,98 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-import random
-import numpy as np
+import pandas as pd
+import firebase_admin
+from firebase_admin import credentials, firestore
 from pulp import LpProblem, LpVariable, lpSum, LpBinary, PULP_CBC_CMD
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import IsolationForest
 from fastapi.middleware.cors import CORSMiddleware
+import logging
 
-# Initialize FastAPI App
+logging.basicConfig(level=logging.INFO)
+
 app = FastAPI()
 
-# Enable CORS (For Frontend Communication)
+# Enable CORS for frontend access
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Change this for production
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Model for Absence Request
+# Firebase Initialization
+try:
+    cred = credentials.Certificate("serviceAccountKey.json")  # Ensure this file exists
+    firebase_admin.initialize_app(cred)
+    db = firestore.client()
+except Exception as e:
+    logging.error(f"Firebase Initialization Failed: {e}")
+
+# Load nurse data from an Excel file
+try:
+    nurse_df = pd.read_excel("nurse_data.xlsx")  # Ensure this file exists
+    nurses = nurse_df.to_dict(orient="records")
+except Exception as e:
+    logging.error(f"Failed to load nurse data: {e}")
+    nurses = []
+
+# Define shifts
+shifts = ["Morning", "Evening", "Night"]
+
+# Request model for absent nurses
 class AbsentNursesRequest(BaseModel):
     absent_nurses: list[str]
 
-# Nurse Data
-nurses = [
-    {'name': 'Alice', 'dept': 'ICU', 'experience': 5, 'certifications': ['ICU', 'CPR'], 'preference': 'Morning'},
-    {'name': 'Bob', 'dept': 'General', 'experience': 10, 'certifications': ['CPR'], 'preference': 'Evening'},
-    {'name': 'Charlie', 'dept': 'Emergency', 'experience': 3, 'certifications': ['Emergency', 'CPR'], 'preference': 'Night'},
-    {'name': 'Diana', 'dept': 'ICU', 'experience': 7, 'certifications': ['ICU', 'CPR', 'Trauma'], 'preference': 'Morning'},
-    {'name': 'Eve', 'dept': 'ICU', 'experience': 2, 'certifications': ['ICU'], 'preference': 'Evening'}
-]
+# Endpoint to get the list of nurses
+@app.get("/nurses/")
+def get_nurses():
+    if not nurses:
+        raise HTTPException(status_code=404, detail="No nurses found")
+    return nurses
 
-# Shift Timings
-shifts = ['Morning', 'Evening', 'Night']
-
-# Patient Data (Newly Added)
-patients = [
-    {'name': 'John Doe', 'dept': 'ICU'},
-    {'name': 'Jane Smith', 'dept': 'General'},
-    {'name': 'Sam Wilson', 'dept': 'Emergency'}
-]
-
-# 🏥 **1️⃣ Generate Nurse Schedule (Ensures No Duplicate Departments in a Shift)**
+# Endpoint to generate the nurse schedule
 @app.post("/generate_schedule/")
 def generate_schedule(request: AbsentNursesRequest):
-    available_nurses = [n for n in nurses if n['name'] not in request.absent_nurses]
+    available_nurses = [n for n in nurses if n["Name"] not in request.absent_nurses]
+    
     if not available_nurses:
         return {"error": "No nurses available"}
 
-    nurses_names = [n['name'] for n in available_nurses]
+    nurses_names = [n["Name"] for n in available_nurses]
     
-    # Optimization Model
+    # Define the Linear Programming Problem
     prob = LpProblem("NurseScheduling")
     x = {(n, s): LpVariable(f"{n}_{s}", 0, 1, LpBinary) for n in nurses_names for s in shifts}
-    
+
     # Constraints
     for n in nurses_names:
-        prob += lpSum(x[n, s] for s in shifts) <= 1  # Each nurse can have only one shift
+        prob += lpSum(x[n, s] for s in shifts) <= 1  # Each nurse gets at most one shift
 
     for s in shifts:
-        prob += lpSum(x[n, s] for n in nurses_names) >= 1  # At least one nurse per shift
+        prob += lpSum(x[n, s] for n in nurses_names) >= 1  # Each shift has at least one nurse
 
     for n in available_nurses:
-        prob += x[n['name'], n['preference']] >= 0.5  # Try to match nurse preferences
+        if "Preferred Shift" in n:
+            prob += x[n["Name"], n["Preferred Shift"]] >= 0.5  # Favor preferred shift
 
+    # Solve the problem
     prob.solve(PULP_CBC_CMD(msg=False))
 
-    # Organize the schedule without repeating departments in the same shift
+    # Prepare the schedule
     schedule = {s: [] for s in shifts}
-    assigned_departments = {s: set() for s in shifts}  # Keep track of assigned departments per shift
-
     for s in shifts:
         for n in nurses_names:
             if x[n, s].value() == 1:
-                dept = next(nr['dept'] for nr in nurses if nr['name'] == n)
-                if dept not in assigned_departments[s]:  # Ensure no duplicate departments
-                    schedule[s].append({"name": n, "dept": dept})
-                    assigned_departments[s].add(dept)
+                dept = next(nr["Certification"] for nr in nurses if nr["Name"] == n)
+                schedule[s].append({"name": n, "dept": dept})
+
+    logging.info(f"Generated Schedule: {schedule}")
+
+    # Store schedule in Firestore
+    try:
+        db.collection("nurse_schedules").document("latest_schedule").set(schedule)
+    except Exception as e:
+        logging.error(f"Firebase Error: {e}")
+        return {"error": f"Failed to upload schedule: {str(e)}"}
 
     return {"schedule": schedule}
-
-# 🏥 **2️⃣ Assign Patients to Nurses**
-@app.get("/assign_patients/")
-def assign_patients():
-    assignments = {}
-
-    for patient in patients:
-        assigned_nurse = next(
-            (n['name'] for n in nurses if n['dept'] == patient['dept']), 
-            "No nurse available"
-        )
-        assignments[patient['name']] = assigned_nurse
-
-    return {"patient_assignments": assignments}
-
-# 🏥 **3️⃣ Predict Shift Based on Experience**
-@app.get("/predict_shift/")
-def predict_shift(experience: int):
-    X = np.array([[n['experience']] for n in nurses])
-    y = [n['preference'] for n in nurses]
-    
-    tree = DecisionTreeClassifier()
-    tree.fit(X, y)
-    
-    predicted_shift = tree.predict([[experience]])[0]
-    return {"predicted_shift": predicted_shift}
-
-# 🏥 **4️⃣ Detect Overworked Nurses Using AI**
-@app.get("/overworked_nurses/")
-def detect_overworked():
-    hours_worked = np.array([[random.randint(35, 70)] for _ in nurses])
-    iso_forest = IsolationForest(contamination=0.2).fit(hours_worked)
-    overworked = [nurses[i]['name'] for i, pred in enumerate(iso_forest.predict(hours_worked)) if pred == -1]
-    return {"overworked_nurses": overworked}
-
-# 🏥 **5️⃣ Find Best Replacement for Absent Nurse**
-@app.get("/replace_nurse/")
-def find_best_replacement(canceled_nurse: str):
-    canceled_data = next((n for n in nurses if n['name'] == canceled_nurse), None)
-    if not canceled_data:
-        return {"error": "Nurse not found"}
-
-    dept, certs = canceled_data['dept'], set(canceled_data['certifications'])
-    eligible = [n for n in nurses if n['name'] != canceled_nurse and n['dept'] == dept]
-    eligible = [n for n in eligible if certs.issubset(n['certifications'])]
-
-    if not eligible:
-        return {"replacement": "No fully certified replacement found"}
-
-    best_replacement = max(eligible, key=lambda n: n['experience'])['name']
-    return {"replacement": best_replacement}
