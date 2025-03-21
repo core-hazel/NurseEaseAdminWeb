@@ -1,165 +1,75 @@
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-const hospitals = ["Hospital A", "Hospital B", "Hospital C"]; // This should be fetched from OpenXL
-const roles = {
-  c123: "Chief Admin",
-  a123: "Admin",
-  h123: "Head Nurse",
-  n123: "Nurse",
-};
-
-function Login() {
+const Login = () => {
   const [hospital, setHospital] = useState("");
-  const [nurseID, setNurseID] = useState("");
+  const [adminId, setAdminId] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState(null);
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    if (roles[password]) {
-      setRole(roles[password]);
+    if (hospital && adminId && password) {
+      navigate("/dashboard");
     } else {
-      alert("Invalid credentials");
+      alert("Please fill all fields.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        {!role ? (
-          <>
-            <h2 className="text-2xl font-bold text-center text-blue-600">Nurse Ease Login</h2>
-            <div className="mt-4">
-              <label className="block text-gray-700">Select Hospital:</label>
-              <select
-                value={hospital}
-                onChange={(e) => setHospital(e.target.value)}
-                className="w-full p-2 border rounded mt-1"
-              >
-                <option value="">-- Choose Hospital --</option>
-                {hospitals.map((hosp) => (
-                  <option key={hosp} value={hosp}>{hosp}</option>
-                ))}
-              </select>
-            </div>
-            <div className="mt-4">
-              <label className="block text-gray-700">Nurse ID:</label>
-              <input
-                type="text"
-                value={nurseID}
-                onChange={(e) => setNurseID(e.target.value)}
-                className="w-full p-2 border rounded mt-1"
-              />
-            </div>
-            <div className="mt-4">
-              <label className="block text-gray-700">Password:</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-2 border rounded mt-1"
-              />
-            </div>
-            <button
-              onClick={handleLogin}
-              className="w-full bg-blue-600 text-white p-2 rounded mt-4 hover:bg-blue-700"
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+      <h1 className="text-3xl font-bold mb-8">NurseEase Admin Login</h1>
+
+      <Card className="w-96 shadow-2xl rounded-2xl p-6">
+        <CardContent>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Select Hospital</label>
+            <select
+              value={hospital}
+              onChange={(e) => setHospital(e.target.value)}
+              className="w-full p-2 rounded border"
             >
-              Login
-            </button>
-            <button
-              onClick={() => navigate("/register")}
-              className="w-full bg-gray-600 text-white p-2 rounded mt-2 hover:bg-gray-700"
-            >
-              Register
-            </button>
-          </>
-        ) : (
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-blue-600">Welcome, {role}!</h2>
-            <p className="text-gray-700 mt-2">Select an option below:</p>
-            <select className="w-full p-2 border rounded mt-4">
-              <option>Schedule</option>
-              <option>Data</option>
-              <option>Leave Request</option>
-              <option>Attendance</option>
+              <option value="">-- Select Hospital --</option>
+              <option value="Hospital A">Hospital A</option>
+              <option value="Hospital B">Hospital B</option>
             </select>
           </div>
-        )}
-      </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Admin ID</label>
+            <Input value={adminId} onChange={(e) => setAdminId(e.target.value)} />
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Password</label>
+            <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </div>
+          <div className="flex justify-between">
+            <Button onClick={handleLogin}>Login</Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
-}
+};
 
-function Register() {
-  const [hospitalName, setHospitalName] = useState("");
-  const [chiefAdmin, setChiefAdmin] = useState("");
-  const [subscription, setSubscription] = useState("Normal");
-  const navigate = useNavigate();
+export default Login;
+// Compare this snippet from frontend/src/App.jsx:
+// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+// import Home from '@/Home';
+// import Login from '@/components/Login';
+// import Register from '@/components/Register';
+// import Dashboard from '@/components/Dashboard';
 
-  const handleRegister = () => {
-    alert("Registration successful!");
-    navigate("/");
-  };
-
-  return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-        <h2 className="text-2xl font-bold text-center text-blue-600">Register</h2>
-        <div className="mt-4">
-          <label className="block text-gray-700">Hospital Name:</label>
-          <input
-            type="text"
-            value={hospitalName}
-            onChange={(e) => setHospitalName(e.target.value)}
-            className="w-full p-2 border rounded mt-1"
-          />
-        </div>
-        <div className="mt-4">
-          <label className="block text-gray-700">Chief Admin Name:</label>
-          <input
-            type="text"
-            value={chiefAdmin}
-            onChange={(e) => setChiefAdmin(e.target.value)}
-            className="w-full p-2 border rounded mt-1"
-          />
-        </div>
-        <div className="mt-4">
-          <label className="block text-gray-700">Subscription Level:</label>
-          <select
-            value={subscription}
-            onChange={(e) => setSubscription(e.target.value)}
-            className="w-full p-2 border rounded mt-1"
-          >
-            <option>Normal</option>
-            <option>Silver</option>
-            <option>Gold</option>
-          </select>
-        </div>
-        <button
-          onClick={handleRegister}
-          className="w-full bg-blue-600 text-white p-2 rounded mt-4 hover:bg-blue-700"
-        >
-          Register
-        </button>
-        <button
-          onClick={() => navigate("/")}
-          className="w-full bg-gray-600 text-white p-2 rounded mt-2 hover:bg-gray-700"
-        >
-          Back to Login
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export default function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-      </Routes>
-    </Router>
-  );
-}
+// const App = () => {
+//     return (
+//         <Router>
+//             <Routes>
+//                 <Route path="/" element={<Home />} />
+//                 <Route path="/login" element={<Login />} />  
+//                 <Route path="/register" element={<Register />} />  
+//                 <Route path="/dashboard" element={<Dashboard />} />
+//             </Routes>
+//         </Router>
+//     );
+// };

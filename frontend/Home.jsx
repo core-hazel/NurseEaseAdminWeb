@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   return (
@@ -8,12 +8,12 @@ const Home = () => {
       <div className="mb-6">
         <img src="/logo.png" alt="NurseEase Logo" className="h-20" />
       </div>
-      
+
       <h2 className="text-4xl font-bold text-gray-900">Welcome to NurseEase</h2>
       <p className="text-gray-600 mt-4 max-w-lg">
         A seamless platform for hospital staff to manage schedules, attendance, and leave requests efficiently.
       </p>
-      
+
       {/* Buttons */}
       <div className="mt-6 flex gap-6">
         <Link to="/login" className="px-6 py-3 bg-blue-500 text-white rounded-lg shadow-md hover:bg-blue-600">
@@ -27,14 +27,4 @@ const Home = () => {
   );
 };
 
-const App = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Home />} />
-      </Routes>
-    </Router>
-  );
-};
-
-export default App;
+export default Home;
