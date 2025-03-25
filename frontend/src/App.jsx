@@ -1,57 +1,68 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from './components/ui/card';
+import axios from 'axios';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
-import { Input } from './components/ui/input';
-import { Button } from './components/ui/button';
+const LandingPage = () => {
+    const [departments, setDepartments] = useState(['Cardiology', 'Neurology']);
+    const [schedule, setSchedule] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [file, setFile] = useState(null);
 
-const LandingPageAndLogin = () => {
-    const [hospital, setHospital] = useState('');
-    const [adminId, setAdminId] = useState('');
-    const [password, setPassword] = useState('');
-    const navigate = useNavigate();
-
-    const handleLogin = () => {
-        if (hospital && adminId && password) {
-            navigate('/dashboard');
-        } else {
-            alert('Please fill all fields.');
+    const handleGenerateSchedule = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.post('http://localhost:8000/generate-schedule', { departments });
+            setSchedule(response.data.schedule);
+            setLoading(false);
+        } catch (error) {
+            console.error('Error generating schedule:', error);
+            setLoading(false);
         }
     };
 
-    const handleRegister = () => {
-        navigate('/register');
+    const handleFileChange = (event) => {
+        setFile(event.target.files[0]);
+    };
+
+    const handleFileUpload = async () => {
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const response = await axios.post('http://localhost:8000/upload-file', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            alert('File uploaded successfully!');
+        } catch (error) {
+            console.error('Error uploading file:', error);
+        }
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-lavender">
-            <h1 className="text-3xl font-bold mb-8">NurseEase Admin Portal</h1>
-
-            <Card className="w-96 shadow-2xl rounded-2xl p-6">
+        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+            <Card className="w-full max-w-2xl p-6 bg-white rounded-2xl shadow-xl">
                 <CardContent>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Select Hospital</label>
-                        <select
-                            value={hospital}
-                            onChange={(e) => setHospital(e.target.value)}
-                            className="w-full p-2 rounded border"
-                        >
-                            <option value="">-- Select Hospital --</option>
-                            <option value="Hospital A">Hospital A</option>
-                            <option value="Hospital B">Hospital B</option>
-                        </select>
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Admin ID</label>
-                        <Input value={adminId} onChange={(e) => setAdminId(e.target.value)} />
-                    </div>
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium mb-1">Password</label>
-                        <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-                    </div>
-                    <div className="flex justify-between">
-                        <Button onClick={handleLogin}>Login</Button>
-                        <Button onClick={handleRegister} variant="secondary">Register</Button>
+                    <h1 className="text-3xl font-bold mb-6">Generate Nurse Schedule</h1>
+                    <Button onClick={handleGenerateSchedule} disabled={loading}>
+                        {loading ? 'Generating...' : 'Generate Schedule'}
+                    </Button>
+
+                    {schedule && (
+                        <div className="mt-6">
+                            <h2 className="text-2xl font-bold mb-4">Generated Schedule:</h2>
+                            <pre className="p-4 bg-gray-200 rounded-xl">
+                                {JSON.stringify(schedule, null, 2)}
+                            </pre>
+                        </div>
+                    )}
+
+                    <div className="mt-6">
+                        <h2 className="text-xl font-bold mb-2">Upload Nurse Data (Excel/CSV)</h2>
+                        <input type="file" accept=".xlsx,.csv" onChange={handleFileChange} />
+                        <Button onClick={handleFileUpload} className="mt-2">Upload File</Button>
                     </div>
                 </CardContent>
             </Card>
@@ -59,5 +70,5 @@ const LandingPageAndLogin = () => {
     );
 };
 
-export default LandingPageAndLogin;
+export default LandingPage;
 

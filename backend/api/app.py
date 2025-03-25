@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from auth import router as auth_router
-from schedule import router as schedule_router
+#from schedule import router as schedule_router
 from routes import router as routes_router
+from upload_file import router as upload_file_router
 
 app = FastAPI(title="NurseEase Admin API", version="1.0")
 
@@ -17,8 +18,10 @@ app.add_middleware(
 
 # Include route files
 app.include_router(auth_router, prefix="/auth", tags=["Authentication"])
-app.include_router(schedule_router, prefix="/schedule", tags=["Scheduling"])
+#app.include_router(schedule_router, prefix="/schedule", tags=["Scheduling"])
 app.include_router(routes_router, tags=["Routes"])
+
+app.include_router(upload_file_router)
 
 # Root Endpoint
 @app.get("/")

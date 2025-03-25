@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic
+werkzeug
+firebase-admin
+pulp
+pandas
+
