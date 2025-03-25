@@ -5,4 +5,5 @@ werkzeug
 firebase-admin
 pulp
 pandas
+python-multipart
 

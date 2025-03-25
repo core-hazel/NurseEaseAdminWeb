@@ -1,61 +1,89 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
+import Dropdown from "@/components/Dropdown";
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
+    const [hospitals, setHospitals] = useState([]); // State to store hospital list
+    const [selectedHospital, setSelectedHospital] = useState(""); // State for selected hospital
+    const [adminId, setAdminId] = useState("");
+    const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+    // Fetch hospitals from the backend
+    useEffect(() => {
+        fetch("http://localhost:8000/api/hospitals") 
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch hospitals");
+                }
+                return response.json();
+            })
+            .then((data) => setHospitals(data))
+            .catch((error) => console.error("Error fetching hospitals:", error));
+    }, []);
+
+    const handleLogin = async (e) => {
         e.preventDefault();
 
-        // Basic validation
-        if (!username || !password) {
-            alert('Please enter both username and password');
-            return;
-        }
+        const loginData = {
+            hospitalId: selectedHospital,
+            adminId,
+            password,
+        };
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+            const response = await fetch("http://localhost:8000/api/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(loginData),
             });
 
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                navigate('/dashboard');
-            } else {
-                alert('Login failed. Please check your credentials.');
+            if (!response.ok) {
+                throw new Error("Login failed");
             }
+
+            const result = await response.json();
+            alert(`Login successful! Role: ${result.role}`);
+            navigate('/dashboard');
         } catch (error) {
-            console.error('Error during login:', error);
-            alert('An error occurred. Please try again later.');
+            console.error("Error during login:", error);
+            alert("Login failed. Please check your credentials.");
         }
     };
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-80">
+            <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-md w-80">
                 <h2 className="text-2xl font-bold mb-4">Login</h2>
-
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-2 mb-3 border border-gray-300 rounded"
-                />
-
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-2 mb-4 border border-gray-300 rounded"
-                />
-
+                <label>
+                    Select Hospital:
+                    <Dropdown onHospitalSelect={(hospital) => setSelectedHospital(hospital)} />
+                </label>
+                <br />
+                <label>
+                    Admin ID:
+                    <input
+                        type="text"
+                        value={adminId}
+                        onChange={(e) => setAdminId(e.target.value)}
+                        required
+                        className="w-full p-2 mb-3 border border-gray-300 rounded"
+                    />
+                </label>
+                <br />
+                <label>
+                    Password:
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        className="w-full p-2 mb-4 border border-gray-300 rounded"
+                    />
+                </label>
+                <br />
                 <button
                     type="submit"
                     className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-all"
