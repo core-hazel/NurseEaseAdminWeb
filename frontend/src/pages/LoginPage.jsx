@@ -1,64 +1,70 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { login } from '../services/auth';
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('');
+    const [hospitalId, setHospitalId] = useState('');
+    const [adminId, setAdminId] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
-
-        // Basic validation
-        if (!username || !password) {
-            alert('Please enter both username and password');
-            return;
-        }
+        setError(''); // Clear any previous errors
 
         try {
-            const response = await fetch('http://127.0.0.1:8000/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            const data = await login(hospitalId, adminId, password);
+            console.log(data); // Log the response (e.g., message, role)
 
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                navigate('/dashboard');
-            } else {
-                alert('Login failed. Please check your credentials.');
-            }
-        } catch (error) {
-            console.error('Error during login:', error);
-            alert('An error occurred. Please try again later.');
+            // Redirect to the dashboard on successful login
+            navigate('/dashboard');
+        } catch (err) {
+            setError(err.message); // Display the error message
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
-            <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md w-80">
-                <h2 className="text-2xl font-bold mb-4">Login</h2>
-
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full p-2 mb-3 border border-gray-300 rounded"
-                />
-
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full p-2 mb-4 border border-gray-300 rounded"
-                />
-
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+            <form
+                onSubmit={handleLogin}
+                className="bg-white p-6 rounded shadow-md w-full max-w-sm"
+            >
+                <h1 className="text-2xl font-bold mb-4 text-center">Admin Login</h1>
+                {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Hospital ID</label>
+                    <input
+                        type="text"
+                        value={hospitalId}
+                        onChange={(e) => setHospitalId(e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        required
+                    />
+                </div>
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Admin ID</label>
+                    <input
+                        type="text"
+                        value={adminId}
+                        onChange={(e) => setAdminId(e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        required
+                    />
+                </div>
+                <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">Password</label>
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-3 py-2 border rounded"
+                        required
+                    />
+                </div>
                 <button
                     type="submit"
-                    className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition-all"
+                    className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
                 >
                     Login
                 </button>
