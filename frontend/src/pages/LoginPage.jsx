@@ -57,7 +57,7 @@ const LoginPage = () => {
         <div className="flex items-center justify-center min-h-screen bg-gray-100">
             <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-md w-80">
                 <h2 className="text-2xl font-bold mb-4">Login</h2>
-                <label>
+                <label className="block mb-2">
                     Select Hospital:
                     <Dropdown onHospitalSelect={(hospital) => setSelectedHospital(hospital)} />
                 </label>
@@ -73,14 +73,14 @@ const LoginPage = () => {
                     />
                 </label>
                 <br />
-                <label>
+                <label className="block mb-2">
                     Password:
                     <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="w-full p-2 mb-4 border border-gray-300 rounded"
+                        className="w-full p-2 mb-3 border border-gray-300 rounded"
                     />
                 </label>
                 <br />
