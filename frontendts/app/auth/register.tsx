@@ -1,20 +1,25 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 interface RegisterProps {
     onSwitchToLogin: () => void; // Callback to switch back to login
 }
 
 const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
+    const navigate = useNavigate();
+
     const [formData, setFormData] = useState({
         hospitalName: "",
         address: "",
-        district: "",
+        specialities: "",
         state: "",
-        phoneNumber: "",
+        contactNumber: "",
         email: "",
-        recommendedHospital: "",
+        noofbeds: "",
         city: "",
     });
+
+    const [error, setError] = useState<string | null>(null); // State for error messages
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -24,11 +29,55 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
         }));
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        console.log("Form Data Submitted:", formData);
 
-        // Add API call here to submit the form data
+        // Validate required fields
+        if (
+            !formData.hospitalName ||
+            !formData.address ||
+            !formData.specialities ||
+            !formData.state ||
+            !formData.contactNumber ||
+            !formData.email ||
+            !formData.city
+        ) {
+            setError("Please fill in all required fields.");
+            return;
+        }
+
+        setError(null); 
+        const registerData = {
+            hospitalName: formData.hospitalName,
+            address: formData.address,
+            specialities: formData.specialities.split(",").map((speciality) => speciality.trim()),
+            state: formData.state,
+            contactNumber: formData.contactNumber,
+            email: formData.email,
+            noofbeds: formData.noofbeds,
+            city: formData.city,
+        };
+
+        try {
+            const response = await fetch("http://localhost:8000/auth/register", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(registerData),
+            });
+
+            if (!response.ok) {
+                throw new Error("Registration failed");
+            }
+
+            const result = await response.json();
+            alert(`Registration successful! Hospital ID: ${result.hospitalId}\nAdmin ID: ${result.adminId}\nAdmin Password: ${result.adminPassword}`);
+            navigate("/dashboard");
+        } catch (error) {
+            console.error("Error during registration:", error);
+            setError("Registration failed. Please try again.");
+        }
     };
 
     return (
@@ -41,6 +90,11 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                     Hospital Registration
                 </h2>
                 <form className="mt-6 space-y-6" onSubmit={handleSubmit}>
+                    {error && (
+                        <div className="text-red-500 text-center mb-4">
+                            {error}
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -72,22 +126,17 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                District
+                                Specialities
                             </label>
-                            <select
-                                name="district"
-                                value={formData.district}
+                            <input
+                                type="text"
+                                name="specialities"
+                                value={formData.specialities}
                                 onChange={handleChange}
                                 className="w-full mt-1 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring focus:ring-blue-200 dark:focus:ring-blue-500 focus:outline-none"
+                                placeholder="Enter Specialities , separated"
                                 required
-                            >
-                                <option value="">Select District</option>
-                                <option value="Chennai">Chennai</option>
-                                <option value="Coimbatore">Coimbatore</option>
-                                <option value="Madurai">Madurai</option>
-                                <option value="Salem">Salem</option>
-                                <option value="Trichy">Trichy</option>
-                            </select>
+                            />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
@@ -110,15 +159,15 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                Phone Number
+                                Contact Number
                             </label>
                             <input
                                 type="tel"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
+                                name="contactNumber"
+                                value={formData.contactNumber}
                                 onChange={handleChange}
                                 className="w-full mt-1 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring focus:ring-blue-200 dark:focus:ring-blue-500 focus:outline-none"
-                                placeholder="Enter phone number"
+                                placeholder="Enter contact number"
                                 required
                             />
                         </div>
@@ -138,16 +187,15 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-600 dark:text-gray-300">
-                                Recommended Hospital
+                                Number of Beds
                             </label>
                             <input
                                 type="text"
-                                name="recommendedHospital"
-                                value={formData.recommendedHospital}
+                                name="noofbeds"
+                                value={formData.noofbeds}
                                 onChange={handleChange}
                                 className="w-full mt-1 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:ring focus:ring-blue-200 dark:focus:ring-blue-500 focus:outline-none"
-                                placeholder="Enter recommended hospital name"
-                                required
+                                placeholder="Enter number of beds"
                             />
                         </div>
                         <div>
@@ -176,10 +224,7 @@ const Register: React.FC<RegisterProps> = ({ onSwitchToLogin }) => {
                     Already have an account?{" "}
                     <button
                         type="button"
-                        onClick={() => {
-                            console.log("Switching to login");
-                            onSwitchToLogin();
-                        }}
+                        onClick={onSwitchToLogin}
                         className="text-blue-500 dark:text-blue-400 hover:underline"
                     >
                         Log in

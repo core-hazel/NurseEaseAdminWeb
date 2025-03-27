@@ -1,6 +1,7 @@
 fastapi
 uvicorn
 pydantic
+pydantic[email]
 werkzeug
 firebase-admin
 pulp

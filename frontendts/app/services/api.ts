@@ -51,12 +51,23 @@ export const generateNurseSchedule = async (): Promise<any> => {
 };
 
 // Create a new admin
-export const createAdmin = async (admin: Admin): Promise<any> => {
+export const register = async (admin: Admin): Promise<any> => {
     try {
-        const response = await api.post('/register_admin', admin);
+        const response = await api.post('/auth/register', admin);
         return response.data;
     } catch (error) {
-        console.error('Create Admin Error:', error);
+        console.error('Create Hospital Error', error);
+        throw error;
+    }
+};
+
+// Create a new admin
+export const login = async (admin: Admin): Promise<any> => {
+    try {
+        const response = await api.post('/auth/login', admin);
+        return response.data;
+    } catch (error) {
+        console.error('login Error', error);
         throw error;
     }
 };
