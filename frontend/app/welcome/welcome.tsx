@@ -1,4 +1,4 @@
-import logoDark from "./logo-dark.svg";
+import logoDark from "./logo-dark.png";
 import logoLight from "./logo-light.svg";
 import { Link } from "react-router-dom"; // Ensure Link is imported for navigation
 
