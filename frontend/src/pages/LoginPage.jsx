@@ -11,7 +11,7 @@ const LoginPage = () => {
 
     // Fetch hospitals from the backend
     useEffect(() => {
-        fetch("http://localhost:8000/api/hospitals") 
+        fetch("http://localhost:8000/hospitals") 
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch hospitals");
@@ -26,13 +26,13 @@ const LoginPage = () => {
         e.preventDefault();
 
         const loginData = {
-            hospitalId: selectedHospital,
+            hospitalId: selectedHospital.id,
             adminId,
             password,
         };
 
         try {
-            const response = await fetch("http://localhost:8000/api/login", {
+            const response = await fetch("http://localhost:8000/auth/login", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -54,7 +54,7 @@ const LoginPage = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-gray-100">
+        <div className="flex items-center justify-center min-h-screen bg-gray~-100">
             <form onSubmit={handleLogin} className="bg-white p-6 rounded-lg shadow-md w-80">
                 <h2 className="text-2xl font-bold mb-4">Login</h2>
                 <label className="block mb-2">

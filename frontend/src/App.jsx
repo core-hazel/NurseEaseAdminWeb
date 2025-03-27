@@ -1,4 +1,4 @@
-import { Route, Router, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 import Home from "./pages/Home"; // Ensure Home is imported
 import { AuthProvider } from "./context/AuthContext.jsx"; // Change .js to .jsx
 import DashboardPage from "./pages/DashboardPage";
