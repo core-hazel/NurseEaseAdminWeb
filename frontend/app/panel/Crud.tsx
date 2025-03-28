@@ -1,5 +1,7 @@
+import NurseEnroll from "~/crud/nurseenroll";
+
 function Crud() {
-    return <h2 className="text-2xl">CRUD Operations Page</h2>;
+    return <NurseEnroll/>;
 }
 
 export default Crud;

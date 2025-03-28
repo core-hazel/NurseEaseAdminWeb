@@ -1,24 +1,19 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-import firebase_admin
-from firebase_admin import credentials, firestore, messaging
+from firebase_admin import  messaging
 from pulp import LpProblem, LpVariable, lpSum, LpBinary, PULP_CBC_CMD
 import logging
+from firebase_config import db
 
 logging.basicConfig(level=logging.INFO)
 
-app = FastAPI()
-
-# Firebase Initialization
-try:
-    cred = credentials.Certificate("serviceAccountKey.json")  # Ensure this file exists
-    firebase_admin.initialize_app(cred)
-    db = firestore.client()
-except Exception as e:
-    logging.error(f"Firebase Initialization Failed: {e}")
+router = APIRouter()
 
 # Define shifts
 shifts = ["Morning", "Evening", "Night"]
+
+class hospital(BaseModel):
+    hospital_id: str
 
 # Request model for absent nurses
 class AbsentNursesRequest(BaseModel):
@@ -59,7 +54,7 @@ def notify_nurses(hospital_id, schedule):
         logging.warning("No nurses found with FCM tokens.")
 
 # Endpoint to generate the nurse schedule
-@app.post("/generate_schedule")
+@router.post("/generate_schedule")
 def generate_schedule(request: AbsentNursesRequest):
     hospital_id = request.hospital_id
     nurses_ref = db.collection("hospitals").document(hospital_id).collection("nurses")
@@ -101,12 +96,18 @@ def generate_schedule(request: AbsentNursesRequest):
     return {"message": "Schedule generated successfully", "schedule": schedule}
 
 
-@app.get("/fetch_schedule/{hospital_id}")
-def fetch_schedule(hospital_id: str):
+@router.post("/fetch_schedule")
+def fetch_schedule(request: hospital):
+    hospital_id = request.hospital_id
     schedule_ref = db.collection("hospitals").document(hospital_id).collection("schedules").document("overall_schedule")
     schedule_doc = schedule_ref.get()
     
+    if not schedule_doc.exists:
+        logging.warning(f"No schedule found for hospital_id: {hospital_id}")
+        raise HTTPException(status_code=404, detail="No Schedule is available")
+    
     if schedule_doc.exists:
+        logging.info(f"Schedule fetched for hospital_id: {hospital_id}")
         return schedule_doc.to_dict()
     else:
-        raise HTTPException(status_code=404, detail="Schedule not found")
+        raise HTTPException(status_code=404, detail="Failed to fetch schedule")

@@ -32,7 +32,7 @@ export const fetchHospitals = async (): Promise<Hospital[]> => {
 export const fetchNursesSchedule = async (hospitalId: string): Promise<any> => {
     console.log("Fetching schedule for:", hospitalId);  // ✅ Debugging log
     try {
-        const response = await api.get(`/fetch_schedule/${hospitalId}`);
+        const response = await api.post('/schedule/fetch_schedule');
         return response.data;
     } catch (error) {
         console.error('Fetch Schedule Error:', error);
@@ -40,12 +40,21 @@ export const fetchNursesSchedule = async (hospitalId: string): Promise<any> => {
     }
 };
 
+export const enrollNurse = async (hospitalId: string, nurseData: any): Promise<any> => {
+    try {
+        const response = await api.post(`/enroll_nurse/${hospitalId}`, nurseData); // Correct interpolation
+        return response.data;
+    } catch (error) {
+        console.error('Enroll Nurse Error:', error);
+        throw new Error('Failed to enroll the nurse. Please try again.');
+    }
+};
 
 
 // Generate a new nurse schedule
 export const generateNurseSchedule = async (hospitalId: string, absentNurses: string[]): Promise<any> => {
     try {
-        const response = await api.post('/generate_schedule', {
+        const response = await api.post('/schedule/generate_schedule', {
             hospital_id: hospitalId,
             absent_nurses: absentNurses,
         });
