@@ -29,27 +29,32 @@ export const fetchHospitals = async (): Promise<Hospital[]> => {
 };
 
 // Fetch the nurse schedule
-export const fetchNurseSchedule = async (): Promise<any> => {
+export const fetchNursesSchedule = async (hospitalId: string): Promise<any> => {
+    console.log("Fetching schedule for:", hospitalId);  // ✅ Debugging log
     try {
-        const response = await api.get('/schedule');
+        const response = await api.get(`/fetch_schedule/${hospitalId}`);
         return response.data;
     } catch (error) {
         console.error('Fetch Schedule Error:', error);
-        throw error;
+        throw new Error('Failed to fetch the nurse schedule. Please try again.');
     }
 };
 
+
+
 // Generate a new nurse schedule
-export const generateNurseSchedule = async (): Promise<any> => {
+export const generateNurseSchedule = async (hospitalId: string, absentNurses: string[]): Promise<any> => {
     try {
-        const response = await api.post('/generate_schedule');
+        const response = await api.post('/generate_schedule', {
+            hospital_id: hospitalId,
+            absent_nurses: absentNurses,
+        });
         return response.data;
     } catch (error) {
         console.error('Generate Schedule Error:', error);
-        throw error;
+        throw new Error('Failed to generate the nurse schedule. Please try again.');
     }
 };
-
 // Create a new admin
 export const register = async (admin: Admin): Promise<any> => {
     try {
@@ -70,6 +75,23 @@ export const login = async (admin: Admin): Promise<any> => {
         console.error('login Error', error);
         throw error;
     }
+};
+
+// ✅ Automatically attach auth token if available
+api.interceptors.request.use(
+    (config) => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+    },
+    (error) => Promise.reject(error)
+);
+
+// ✅ Logout function (optional)
+export const logout = () => {
+    localStorage.removeItem('token');
 };
 
 // Export the Axios instance for custom requests

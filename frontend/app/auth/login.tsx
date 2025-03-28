@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import{ useAuth } from "../context/AuthContext";
 import Dropdown from "./Dropdown"; // Ensure this path is correct
 import Register from "./register"; // Import the Register component
 
@@ -10,6 +11,7 @@ const Login = () => {
     const [password, setPassword] = useState("");
     const [isRegister, setIsRegister] = useState(false); // State to toggle between login and register
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     // Fetch hospitals from the backend
     useEffect(() => {
@@ -57,6 +59,12 @@ const Login = () => {
             }
 
             const result = await response.json();
+
+            login({
+                id: adminId,
+                role: result.role,
+                hospitalId: selectedHospital,
+            })
             alert(`Login successful! Role: ${result.role}`);
             navigate("/dashboard");
         } catch (error) {
