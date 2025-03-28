@@ -11,9 +11,8 @@ interface AuthContextType {
 // Define the shape of the User object
 interface User {
     id: string;
-    name: string;
-    email: string;
     role: string;
+    hospitalId: string;
 }
 
 // Create the AuthContext with a default value of `null`

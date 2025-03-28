@@ -59,7 +59,7 @@ def notify_nurses(hospital_id, schedule):
         logging.warning("No nurses found with FCM tokens.")
 
 # Endpoint to generate the nurse schedule
-@app.post("/generate_schedule/")
+@app.post("/generate_schedule")
 def generate_schedule(request: AbsentNursesRequest):
     hospital_id = request.hospital_id
     nurses_ref = db.collection("hospitals").document(hospital_id).collection("nurses")
@@ -99,3 +99,14 @@ def generate_schedule(request: AbsentNursesRequest):
     
     notify_nurses(hospital_id, schedule)
     return {"message": "Schedule generated successfully", "schedule": schedule}
+
+
+@app.get("/fetch_schedule/{hospital_id}")
+def fetch_schedule(hospital_id: str):
+    schedule_ref = db.collection("hospitals").document(hospital_id).collection("schedules").document("overall_schedule")
+    schedule_doc = schedule_ref.get()
+    
+    if schedule_doc.exists:
+        return schedule_doc.to_dict()
+    else:
+        raise HTTPException(status_code=404, detail="Schedule not found")

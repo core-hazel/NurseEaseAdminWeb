@@ -1,17 +1,20 @@
 import { Outlet, Link } from "react-router-dom";
 import Sidenbar from "~/panel/sidebar";
 import { UserCircle } from "lucide-react";
+import ProtectedRoute from "~/components/ProtectedRoute";
 
 function Panel() {
     return (
-        <div className="flex h-screen">
-            <Sidenbar />
-            {/* Main Content */}
-            <div className="flex-1">
-            <Header />
-                <Outlet />
+        <ProtectedRoute>
+            <div className="flex h-screen">
+                <Sidenbar />
+                {/* Main Content */}
+                <div className="flex-1">
+                <Header />
+                    <Outlet />
+                </div>
             </div>
-        </div>
+        </ProtectedRoute>
     );
 }
 const Header = () => {
