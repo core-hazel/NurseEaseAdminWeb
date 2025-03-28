@@ -16,7 +16,7 @@ const Schedule = () => {
         setError("");
 
         try {
-            const response = await fetch("http://localhost:8000/generate_schedule", {
+            const response = await fetch("http://localhost:8000/schedule/generate_schedule", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -45,10 +45,25 @@ const Schedule = () => {
     const fetchSchedule = async () => {
         setLoading(true);
         try {
-            const response = await fetch(`http://localhost:8000/fetch_schedule/${hospitalId}`);
+            const response = await fetch(`http://localhost:8000/schedule/fetch_schedule`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    hospital_id: hospitalId, // Ensure hospitalId is valid
+                }),
+            });
+
             if (!response.ok) {
-                throw new Error("Failed to fetch schedule");
+                if (response.status === 404) {
+                    setError("No schedule found for this hospital.");
+                } else {
+                    throw new Error("Failed to fetch schedule");
+                }
+                return;
             }
+
             const data = await response.json();
             console.log("Fetched schedule:", data);
             setSchedule(data);
