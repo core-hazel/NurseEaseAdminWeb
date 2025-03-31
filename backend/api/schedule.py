@@ -63,6 +63,9 @@ def generate_schedule(request: AbsentNursesRequest):
     available_nurses = []
     for doc in nurses_docs:
         nurse = doc.to_dict()
+        if "Name" not in nurse:
+            logging.warning(f"Nurse document {doc.id} is missing the 'Name' field.")
+            continue  # Skip this record if 'Name' is missing
         if nurse["Name"] not in request.absent_nurses:
             available_nurses.append(nurse)
     

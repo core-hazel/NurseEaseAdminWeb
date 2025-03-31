@@ -6,5 +6,6 @@ werkzeug
 firebase-admin
 pulp
 pandas
+openpyxl
 python-multipart
 
