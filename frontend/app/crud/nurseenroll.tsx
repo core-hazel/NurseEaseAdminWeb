@@ -1,39 +1,65 @@
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import axios from "axios";
 
 const NurseEnroll: React.FC = () => {
     const { user } = useAuth(); // ✅ Check if user is authenticated
+
+    const [formData, setFormData] = useState({
+        hospitalId: "",
+        nurseId: "",
+        name: "",
+        email: "",
+        phone: "",
+        password: "",
+        role: "",
+        speciality: "",
+    });
+
     const hospitalId = user?.hospitalId;
-    const [name, setName] = useState("");
-    const [email, setEmail] = useState("");
-    const [phone, setPhone] = useState("");
-    const [role, setRole] = useState("");
-    const [specialty, setSpecialty] = useState("");
+   
     const [loading, setLoading] = useState(false);
 
+    
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prevData) => ({
+            ...prevData,
+            [name]: value,
+        }));
+    };
+    
     const enrollNurse = async () => {
         if (!hospitalId) {
             alert("Hospital ID or code is missing!");
             return;
         }
+   
+        if(
+            !formData.name ||
+            !formData.email ||
+            !formData.phone ||
+            !formData.role ||
+            !formData.speciality
+        ) {
+            alert("Please fill in all fields!");
+            return;
+        }
 
         const nurseId =
-            role === "nurse"
-                ? `nu${hospitalId}${Math.floor(100 + Math.random() * 900)}`
-                : `hd${hospitalId}${Math.floor(100 + Math.random() * 900)}`;
+            formData.role === "nurse"
+                ? `nu${hospitalId.slice(0,3)}${Math.floor(100 + Math.random() * 90)}`
+                : `hd${hospitalId.slice(0,3)}${Math.floor(100 + Math.random() * 90)}`;
 
         const password = (hospitalId.slice(0, 3) || "tem") + Math.floor(1000 + Math.random() * 9000);
-
         const nurseData = {
-            nurseId,
-            name,
-            email,
-            phone,
-            role,
-            specialty,
-            password,
-            hospitalId,
+            hospitalId: hospitalId,
+            nurseId:nurseId,
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            password: password,
+            role: formData.role,
+            speciality: formData.speciality.split(",").map((s) => s.trim()),
         };
 
         try {
@@ -67,31 +93,35 @@ const NurseEnroll: React.FC = () => {
 
             <input
                 type="text"
+                name="name"
                 placeholder="Name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={formData.name}
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white placeholder-gray-400"
             />
 
             <input
                 type="email"
+                name="email"
                 placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white placeholder-gray-400"
             />
 
             <input
                 type="text"
+                name="phone"
                 placeholder="Phone"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                value={formData.phone}
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white placeholder-gray-400"
             />
 
             <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                value={formData.role}
+                name="role"
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white"
             >
                 <option value="" className="text-gray-400">
@@ -107,9 +137,10 @@ const NurseEnroll: React.FC = () => {
 
             <input
                 type="text"
-                placeholder="Specialty"
-                value={specialty}
-                onChange={(e) => setSpecialty(e.target.value)}
+                name="speciality"
+                placeholder="Speciality"
+                value={formData.speciality}
+                onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white placeholder-gray-400"
             />
 
