@@ -1,10 +1,10 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-
-from firebase import get_firestore  # Import Firestore setup
+import logging
+from firebase_config import db  # Assuming this is your initialized Firestore client
+import traceback
 
 router = APIRouter()
-db = get_firestore()  # Initialize Firestore
 
 class nurse(BaseModel):
     nurseId : str
@@ -12,7 +12,7 @@ class nurse(BaseModel):
     email: str
     phone: str
     role: str
-    specialty: str
+    speciality: list[str]
     password: str
     hospitalId: str
 
@@ -28,13 +28,20 @@ async def get_nurses():
     return {"nurses": nurses}
 
 # Example route for adding a nurse
-@router.post("/enrollnurse")
+@router.post("/enroll_nurse")
 async def add_nurse(request : nurse):
     try:
-        # Validate nurse data here if needed
-        doc_ref = db.collection("hospitals").document(request.hospitalId) .collection("nurses").add(nurse)
-        return {"message": "Nurse added successfully", "id": doc_ref.id}
+        nurse_data = request.dict()
+        doc_ref = db.collection("hospitals").document(request.hospitalId).collection("nurses")
+        doc = doc_ref.document(request.nurseId).get()
+        if doc.exists:
+            raise HTTPException(status_code=400, detail="Nurse ID already exists")
+        
+        doc_ref.document(request.nurseId).set(nurse_data)
+        return {"message": "Nurse added successfully", "id": request.nurseId}
     except Exception as e:
+        logging.error(f"Error adding nurse: {traceback.format_exc()}")
+        logging.error(f"Error adding nurse: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to add nurse: {str(e)}")
 
 
