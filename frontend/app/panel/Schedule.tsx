@@ -7,8 +7,8 @@ const Schedule = () => {
     const [error, setError] = useState("");
     const { user } = useAuth();
     const hospitalId = user?.hospitalId; // Replace dynamically if needed
-    console.log("User:", user);
-    console.log("Hospital ID:", hospitalId);
+    // console.log("User:", user);
+    // console.log("Hospital ID:", hospitalId);
 
     // Function to generate schedule using FastAPI
     const generateSchedule = async () => {
@@ -97,18 +97,23 @@ const Schedule = () => {
             {error && <p className="text-red-600">{error}</p>}
 
             <div className="overflow-x-auto">
-                <table className="min-w-full bg-white border border-gray-300">
+                <table className="min-w-full bg-gray-800 border border-gray-700 text-white">
                     <thead>
                         <tr className="bg-gray-900 text-white">
-                            <th className="px-4 py-2 text-left">Nurse</th>
-                            <th className="px-4 py-2 text-left">Shift</th>
-                            <th className="px-4 py-2 text-left">Department</th>
+                            <th className="px-4 py-2 text-left border-b border-gray-700">Nurse</th>
+                            <th className="px-4 py-2 text-left border-b border-gray-700">Shift</th>
+                            <th className="px-4 py-2 text-left border-b border-gray-700">Department</th>
                         </tr>
                     </thead>
                     <tbody>
                         {Object.entries(schedule).map(([nurse, shifts]) =>
                             shifts.map((shiftDetail, index) => (
-                                <tr key={`${nurse}-${index}`} className="border-t border-gray-300">
+                                <tr
+                                    key={`${nurse}-${index}`}
+                                    className={`border-t border-gray-700 ${
+                                        index % 2 === 0 ? "bg-gray-800" : "bg-gray-700"
+                                    }`}
+                                >
                                     <td className="px-4 py-2">{nurse}</td>
                                     <td className="px-4 py-2">{shiftDetail.shift}</td>
                                     <td className="px-4 py-2">{shiftDetail.dept}</td>

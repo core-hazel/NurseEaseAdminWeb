@@ -28,24 +28,3 @@ def authenticate_admin(hospital_id, username, raw_password):
     return False
 # 
 
-def upload_data_to_firestore(data, collection_name="nurse_data"):
-    """
-    Uploads a list of dictionaries to a specified Firestore collection.
-    
-    :param data: List of dictionaries containing the data to upload
-    :param collection_name: Firestore collection where data will be stored
-    """
-    try:
-        collection_ref = firebase_db.collection(collection_name)
-
-        for record in data:
-            # Add data to Firestore with an auto-generated document ID
-            collection_ref.add(record)
-
-        print(f"Successfully uploaded {len(data)} records to Firestore collection: {collection_name}")
-        return {"message": "Data uploaded successfully."}
-
-    except Exception as e:
-        print(f"Error uploading data to Firestore: {str(e)}")
-        return {"error": str(e)}
-

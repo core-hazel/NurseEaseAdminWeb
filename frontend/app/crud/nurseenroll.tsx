@@ -16,10 +16,8 @@ const NurseEnroll: React.FC = () => {
     });
 
     const hospitalId = user?.hospitalId;
-   
     const [loading, setLoading] = useState(false);
 
-    
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setFormData((prevData) => ({
@@ -27,14 +25,14 @@ const NurseEnroll: React.FC = () => {
             [name]: value,
         }));
     };
-    
+
     const enrollNurse = async () => {
         if (!hospitalId) {
             alert("Hospital ID or code is missing!");
             return;
         }
-   
-        if(
+
+        if (
             !formData.name ||
             !formData.email ||
             !formData.phone ||
@@ -47,13 +45,13 @@ const NurseEnroll: React.FC = () => {
 
         const nurseId =
             formData.role === "nurse"
-                ? `nu${hospitalId.slice(0,3)}${Math.floor(100 + Math.random() * 90)}`
-                : `hd${hospitalId.slice(0,3)}${Math.floor(100 + Math.random() * 90)}`;
+                ? `nu${hospitalId.slice(0, 3)}${Math.floor(100 + Math.random() * 90)}`
+                : `hd${hospitalId.slice(0, 3)}${Math.floor(100 + Math.random() * 90)}`;
 
         const password = (hospitalId.slice(0, 3) || "tem") + Math.floor(1000 + Math.random() * 9000);
         const nurseData = {
             hospitalId: hospitalId,
-            nurseId:nurseId,
+            nurseId: nurseId,
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
@@ -65,7 +63,6 @@ const NurseEnroll: React.FC = () => {
         try {
             setLoading(true);
 
-            // Correctly interpolate the hospitalId in the URL
             const response = await fetch(`http://localhost:8000/enroll_nurse`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -88,8 +85,10 @@ const NurseEnroll: React.FC = () => {
     };
 
     return (
-        <div className="p-6 bg-gray-800 rounded-lg shadow-md w-96 mx-auto">
-            <h2 className="text-xl font-bold mb-4 text-white">Enroll Nurse</h2>
+        <div className="p-6 bg-gray-800 rounded-lg shadow-md w-full max-w-lg mx-auto md:mx-0 justify-center">
+            <h2 className="text-xl font-bold mb-4 text-white text-center md:text-left">
+                Enroll Nurse
+            </h2>
 
             <input
                 type="text"
@@ -138,7 +137,7 @@ const NurseEnroll: React.FC = () => {
             <input
                 type="text"
                 name="speciality"
-                placeholder="Speciality"
+                placeholder="Speciality (comma-separated)"
                 value={formData.speciality}
                 onChange={handleChange}
                 className="w-full p-2 border rounded mb-2 bg-gray-700 text-white placeholder-gray-400"
@@ -146,7 +145,7 @@ const NurseEnroll: React.FC = () => {
 
             <button
                 onClick={enrollNurse}
-                className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+                className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 disabled:opacity-50"
                 disabled={loading}
             >
                 {loading ? "Enrolling..." : "Enroll Nurse"}

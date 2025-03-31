@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import logging
-from firebase_config import db  # Assuming this is your initialized Firestore client
+from firebase_config import db  
 import traceback
 
 router = APIRouter()

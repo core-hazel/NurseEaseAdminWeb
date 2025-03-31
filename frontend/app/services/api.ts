@@ -50,6 +50,23 @@ export const enrollNurse = async (hospitalId: string, nurseData: any): Promise<a
     }
 };
 
+export const uploadFile = async (hospitalId: string, file: File): Promise<any> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('hospital_id', hospitalId); // Append hospital ID to form data
+    try {
+        const response = await api.post('/upload_file', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Upload File Error:', error);
+        throw new Error('Failed to upload the file. Please try again.');
+    }
+};
+
 
 // Generate a new nurse schedule
 export const generateNurseSchedule = async (hospitalId: string, absentNurses: string[]): Promise<any> => {
