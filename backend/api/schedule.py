@@ -1,9 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from firebase_admin import  messaging
+import firebase_admin
+from firebase_admin import messaging
 from pulp import LpProblem, LpVariable, lpSum, LpBinary, PULP_CBC_CMD
 import logging
 from firebase_config import db
+from firebase import send_fcm_notification , send_fcm_notification_to_topic
 
 logging.basicConfig(level=logging.INFO)
 
@@ -30,28 +32,31 @@ def notify_nurses(hospital_id, schedule):
         nurse_data = doc.to_dict()
         nurse_id = doc.id
         
-        if "fcmToken" in nurse_data and nurse_data["fcmToken"]:
-            tokens.append(nurse_data["fcmToken"])
+        # Collect FCM tokens
+        fcm_token = nurse_data.get("fcmToken")  # Safely get the FCM token
+        if fcm_token:
+            tokens.append(fcm_token)
         
-        if nurse_data["Name"] in schedule:
-            nurse_schedule = schedule[nurse_data["Name"]]
+        # Update nurse schedule in Firestore
+        if nurse_data.get("name") in schedule:  # Safely check if "name" exists
+            nurse_schedule = schedule[nurse_data["name"]]
             schedule_ref = db.collection("hospitals").document(hospital_id)\
                                .collection("nurses").document(nurse_id)\
                                .collection("schedules").document("latest")
-            schedule_ref.set(nurse_schedule)
+            schedule_ref.set({"schedule": nurse_schedule})
+            if fcm_token:
+                # Send notification to individual nurse
+                send_fcm_notification_to_topic(fcm_token, "Schedule Update", "Your new schedule is available.")
     
-    if tokens:
-        message = messaging.MulticastMessage(
-            notification=messaging.Notification(
-                title="Schedule Update",
-                body="Your new schedule is available."
-            ),
-            tokens=tokens
-        )
-        messaging.send_multicast(message)
-        logging.info(f"Notifications sent to {len(tokens)} nurses")
-    else:
-        logging.warning("No nurses found with FCM tokens.")
+    # Send notifications if tokens are available
+    # if tokens:
+    #     try:
+    #         send_fcm_notification(tokens, "Schedule Update", "Your new schedule is available.")
+    #         logging.info(f"Notifications sent to {len(tokens)} nurses.")
+    #     except firebase_admin.exceptions.FirebaseError as e:
+    #         logging.error(f"Failed to send notifications: {str(e)}")
+    # else:
+    #     logging.warning("No nurses found with FCM tokens.")
 
 # Endpoint to generate the nurse schedule
 @router.post("/generate_schedule")
@@ -63,16 +68,16 @@ def generate_schedule(request: AbsentNursesRequest):
     available_nurses = []
     for doc in nurses_docs:
         nurse = doc.to_dict()
-        if "Name" not in nurse:
+        if "name" not in nurse:
             logging.warning(f"Nurse document {doc.id} is missing the 'Name' field.")
             continue  # Skip this record if 'Name' is missing
-        if nurse["Name"] not in request.absent_nurses:
+        if nurse["name"] not in request.absent_nurses:
             available_nurses.append(nurse)
     
     if not available_nurses:
         raise HTTPException(status_code=400, detail="No nurses available")
     
-    nurses_names = [n["Name"] for n in available_nurses]
+    nurses_names = [n["name"] for n in available_nurses]
     prob = LpProblem("NurseScheduling")
     x = {(n, s): LpVariable(f"{n}_{s}", 0, 1, LpBinary) for n in nurses_names for s in shifts}
     
@@ -82,7 +87,7 @@ def generate_schedule(request: AbsentNursesRequest):
         prob += lpSum(x[n, s] for n in nurses_names) >= 1
     for n in available_nurses:
         if "Preferred Shift" in n:
-            prob += x[n["Name"], n["Preferred Shift"]] >= 0.5
+            prob += x[n["name"], n["Preferred Shift"]] >= 0.5
     
     prob.solve(PULP_CBC_CMD(msg=False))
     
@@ -90,7 +95,7 @@ def generate_schedule(request: AbsentNursesRequest):
     for s in shifts:
         for n in nurses_names:
             if x[n, s].value() == 1:
-                dept = next(nr["Certification"] for nr in available_nurses if nr["Name"] == n)
+                dept = next(nr["Certification"] for nr in available_nurses if nr["name"] == n)
                 schedule[n].append({"shift": s, "dept": dept})
     
     db.collection("hospitals").document(hospital_id).collection("schedules").document("overall_schedule").set(schedule)

@@ -88,7 +88,7 @@ const Dropdown: React.FC<DropdownProps> = ({ hospitals = [], onHospitalSelect })
                     {filteredHospitals.map((hospital) => (
                         <Card
                             key={hospital.id}
-                            className="p-2 cursor-pointer hover:bg-gray-100"
+                            className="p-2 cursor-pointer hover:bg-gray-600 text-gray-100"
                             onClick={() => handleSelect(hospital)}
                         >
                             {hospital.name}
