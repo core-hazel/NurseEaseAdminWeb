@@ -4,7 +4,7 @@ import logging
 from firebase_admin import credentials, firestore, messaging
 
 # Load Firebase credentials from a service account JSON file
-cred = credentials.Certificate(r"C:\Cloud\git\NurseEaseAdminWeb\backend\serviceAccountKey.json")  # Replace with your actual file path
+cred = credentials.Certificate("../serviceAccountKey.json")  # Replace with your actual file path
 firebase_admin.initialize_app(cred)
 
 def get_firestore():
