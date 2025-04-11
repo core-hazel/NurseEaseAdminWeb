@@ -28,6 +28,18 @@ export const fetchHospitals = async (): Promise<Hospital[]> => {
     }
 };
 
+// Fetch the list of nurses
+export const fetchNurses = async (hospitalId: string): Promise<any> => {
+    console.log("Fetching nurses for:", hospitalId);  // ✅ Debugging log
+    try {
+        const response = await api.get(`/nurses?hospitalId=${hospitalId}`); // Correct interpolation
+        return response.data;
+    } catch (error) {
+        console.error('Fetch Nurses Error:', error);
+        throw new Error('Failed to fetch the nurse list. Please try again.');
+    }
+};
+
 // Fetch the nurse schedule
 export const fetchNursesSchedule = async (hospitalId: string): Promise<any> => {
     console.log("Fetching schedule for:", hospitalId);  // ✅ Debugging log

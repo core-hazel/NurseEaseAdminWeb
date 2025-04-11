@@ -1,45 +1,9 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import GeneralTab from "../crud/generaltab";
 import EnrollTab from "../crud/enrolltab";
 
-// Define the Nurse type
-interface Nurse {
-  id: number;
-  name: string;
-  department: string;
-  ward: string;
-  schedule: string;
-}
-
 function Crud() {
   const [activeTab, setActiveTab] = useState("General");
-  const [nurses, setNurses] = useState<Nurse[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch nurses data from API
-  useEffect(() => {
-    const fetchNurses = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch("http://localhost:8000/nurses"); // Replace with your API endpoint
-        const data = await response.json();
-
-        if (Array.isArray(data)) {
-          setNurses(data);
-        } else {
-          console.error("Unexpected API response format:", data);
-          setNurses([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch nurses data:", error);
-        setNurses([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchNurses();
-  }, []);
 
   const tabs = [
     { key: "General", label: "General" },
@@ -49,12 +13,14 @@ function Crud() {
   return (
     <div className="bg-gray-900 text-white h-full flex flex-col">
       {/* Fixed Tabs */}
-      <div className="flex border-b border-gray-700 bg-gray-900">
+      <div className="flex border-b border-gray-700 bg-gray-900 px-4 py-2">
         {tabs.map((tab) => (
           <button
             key={tab.key}
-            className={`p-2 ml-4 ${
-              activeTab === tab.key ? "border-b-2 border-blue-500 font-bold" : ""
+            className={`px-4 py-2 rounded-md ${
+              activeTab === tab.key
+                ? "border-b-2 border-blue-500 font-bold text-blue-500"
+                : "hover:text-blue-400"
             }`}
             onClick={() => setActiveTab(tab.key)}
           >
@@ -64,13 +30,13 @@ function Crud() {
       </div>
 
       {/* Tab Content */}
-      <div className="flex-grow mt-12">
+      <div className="flex-grow px-4 pt-2 flex"> {/* Use flex-grow and flex */}
         {activeTab === "General" ? (
-          <div className="h-full overflow-auto">
-            <GeneralTab nurses={nurses} loading={loading} />
+          <div className="flex-grow overflow-auto"> {/* Use flex-grow here */}
+            <GeneralTab />
           </div>
         ) : (
-          <div className="h-full flex items-center justify-center">
+          <div className="flex-grow flex items-center justify-center"> {/* Use flex-grow here */}
             <EnrollTab />
           </div>
         )}
